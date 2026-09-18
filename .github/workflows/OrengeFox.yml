@@ -37,9 +37,9 @@ on:
         required: true
         default: 'twrp_marble'
       BUILD_TARGET:
-        description: 'BUILD_TARGET'
+        description: 'BUILD_TARGET (WAJIB "boot", BUKAN "recovery" -- dikonfirmasi dari BoardConfig.mk tree marble ini: baris 53-59 nge-gate BOARD_USES_RECOVERY_AS_BOOT dan TARGET_PREBUILT_KERNEL (prebuilt/kernel-melt bawaan tree) di dalam blok "ifeq ($(BUILD_BOOTIMAGE),true) ... else TARGET_NO_KERNEL_OVERRIDE := true". BUILD_BOOTIMAGE cuma otomatis true kalau goal build-nya bootimage. Kalau BUILD_TARGET=recovery (mka adbd recoveryimage), blok itu TIDAK pernah kepicu -- kernel prebuilt tidak ke-set, dan hasilnya build selesai "sukses" tapi 0 file .img/.zip di out dir, persis seperti kegagalan run pertama.)'
         required: true
-        default: 'recovery'
+        default: 'boot'
       OF_MAINTAINER:
         description: 'OF_MAINTAINER (nama yang tampil di recovery)'
         required: true
@@ -47,7 +47,7 @@ on:
       FOX_MAINTAINER_PATCH_VERSION:
         description: 'FOX_MAINTAINER_PATCH_VERSION — ISI ANGKA POLOS SAJA (contoh: 1, 2, 3). Ini otomatis JADI suffix, jangan isi versi lengkapnya sendiri (isi "2", bukan "R11.4_2")'
         required: true
-        default: '0'
+        default: '1'
       FOX_VANILLA_BUILD:
         description: 'Varian build. HyperOS = tuned utk stock/MIUI (decrypt, keymint asli device fisik, dll -- default). Vanilla = utk flash ROM custom AOSP/GKI (LineageOS, PixelOS, dll). Variabel resmi OrangeFox (FOX_VARIANT/FOX_VANILLA_BUILD) utk membedakan dua mode ini -- independen dari investigasi kegagalan flash payload.bin yang masih berjalan (kecurigaan saat ini di level source twinstall.cpp, bukan di variant setting ini).'
         required: true
@@ -67,7 +67,7 @@ jobs:
 
     # You might want to Checkout your repo first, but not mandatory
     - name: Check Out
-      uses: actions/checkout@v7
+      uses: actions/checkout@v4
 
     # fox_12.1 minimal butuh ~45GB (dokumentasi resmi OrangeFox) -- jauh lebih ringan
     # dari fox_14.1 (~85GB), tapi sapuan pembersihan disk yang sama tetap dipakai apa
@@ -121,7 +121,7 @@ jobs:
     # apalagi fox_16.0 yang butuh JDK 21. Kalau build log tetap minta versi lain,
     # kabari saya.
     - name: Install OpenJDK
-      uses: actions/setup-java@v6
+      uses: actions/setup-java@v4
       with:
         distribution: 'zulu'
         java-version: '11'
@@ -130,7 +130,7 @@ jobs:
       if: ${{ startsWith(github.event.inputs.SYNC_URL, 'git@') || 
           startsWith(github.event.inputs.DEVICE_TREE_URL, 'git@') ||
           startsWith(github.event.inputs.COMMON_TREE_URL, 'git@') }}
-      uses: webfactory/ssh-agent@v0.10.0
+      uses: webfactory/ssh-agent@v0.9.0
       with:
           ssh-private-key: |
             ${{ secrets.SSH_PRIVATE_KEY }}
@@ -342,7 +342,7 @@ jobs:
 
     - name: Upload build log (jika build gagal)
       if: failure()
-      uses: actions/upload-artifact@v7
+      uses: actions/upload-artifact@v4
       with:
         name: build-log-${{ github.run_id }}
         path: ${{ steps.pwd.outputs.workspace-folder }}/build.log
@@ -363,7 +363,7 @@ jobs:
         fi
 
     - name: Upload to Release
-      uses: softprops/action-gh-release@v3
+      uses: softprops/action-gh-release@v2
       with:
         files: |
           ${{ steps.pwd.outputs.workspace-folder }}/fox_12.1/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
