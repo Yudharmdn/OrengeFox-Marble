@@ -37,9 +37,9 @@ on:
         required: true
         default: 'twrp_marble'
       BUILD_TARGET:
-        description: 'BUILD_TARGET (WAJIB "boot", BUKAN "recovery" -- dikonfirmasi dari BoardConfig.mk tree marble ini: baris 53-59 nge-gate BOARD_USES_RECOVERY_AS_BOOT dan TARGET_PREBUILT_KERNEL (prebuilt/kernel-melt bawaan tree) di dalam blok "ifeq ($(BUILD_BOOTIMAGE),true) ... else TARGET_NO_KERNEL_OVERRIDE := true". BUILD_BOOTIMAGE cuma otomatis true kalau goal build-nya bootimage. Kalau BUILD_TARGET=recovery (mka adbd recoveryimage), blok itu TIDAK pernah kepicu -- kernel prebuilt tidak ke-set, dan hasilnya build selesai "sukses" tapi 0 file .img/.zip di out dir, persis seperti kegagalan run pertama.)'
+        description: 'BUILD_TARGET'
         required: true
-        default: 'boot'
+        default: 'recovery'
       OF_MAINTAINER:
         description: 'OF_MAINTAINER (nama yang tampil di recovery)'
         required: true
