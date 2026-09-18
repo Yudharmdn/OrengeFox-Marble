@@ -348,26 +348,50 @@ jobs:
         path: ${{ steps.pwd.outputs.workspace-folder }}/build.log
         retention-days: 7
 
+    # Versi lama cuma glob satu level ("$OUT_DIR"/*.img) dan gagal padahal build SUKSES --
+    # build.log jelas mencatat "Finished building OrangeFox" + path Recovery image/zip, tapi
+    # $OUT_DIR (out/target/product/marble) ternyata berisi folder "target/" bersarang: hasil
+    # akhir tools packaging OrangeFox (sign_zip.sh dkk) mendarat di
+    # out/target/product/marble/target/product/marble/, bukan langsung di $OUT_DIR. Sumber
+    # paling akurat untuk path final adalah pengumuman OrangeFox sendiri di build.log, jadi
+    # itu yang dibaca duluan -- bukan re-derive path sendiri. Fallback pencarian rekursif
+    # (find, bukan glob satu level) dipertahankan untuk jaga-jaga kalau format log berubah --
+    # pola yang sama seperti temuan actions/download-artifact@v8 sebelumnya.
     - name: Verify build artifacts
+      id: verify
       run: |
-        OUT_DIR="${{ steps.pwd.outputs.workspace-folder }}/fox_12.1/out/target/product/${{ github.event.inputs.DEVICE_NAME }}"
-        echo "== Isi $OUT_DIR =="
-        ls -al "$OUT_DIR"
-        shopt -s nullglob
-        imgs=("$OUT_DIR"/*.img)
-        zips=("$OUT_DIR"/*.zip)
-        echo "Ditemukan ${#imgs[@]} file .img dan ${#zips[@]} file .zip"
-        if [ ${#imgs[@]} -eq 0 ] && [ ${#zips[@]} -eq 0 ]; then
-          echo "::error::Tidak ada file .img atau .zip di $OUT_DIR — build tidak menghasilkan output apa pun."
+        BUILD_LOG="${{ steps.pwd.outputs.workspace-folder }}/build.log"
+        PRODUCT_OUT="${{ steps.pwd.outputs.workspace-folder }}/fox_12.1/out/target/product/${{ github.event.inputs.DEVICE_NAME }}"
+
+        IMG_PATH=$(grep -m1 '^Recovery image:' "$BUILD_LOG" | sed 's/^Recovery image:[[:space:]]*//')
+        ZIP_PATH=$(grep -m1 '^Recovery zip:' "$BUILD_LOG" | sed 's/^Recovery zip:[[:space:]]*//')
+
+        if [ -z "$IMG_PATH" ] || [ ! -f "$IMG_PATH" ]; then
+          IMG_PATH=$(find "$PRODUCT_OUT" -type f -iname 'OrangeFox-*.img' 2>/dev/null | head -n1)
+        fi
+        if [ -z "$ZIP_PATH" ] || [ ! -f "$ZIP_PATH" ]; then
+          ZIP_PATH=$(find "$PRODUCT_OUT" -type f -iname 'OrangeFox-*.zip' 2>/dev/null | head -n1)
+        fi
+
+        echo "img: ${IMG_PATH:-<tidak ditemukan>}"
+        echo "zip: ${ZIP_PATH:-<tidak ditemukan>}"
+
+        if [ -z "$IMG_PATH" ] || [ ! -f "$IMG_PATH" ] || [ -z "$ZIP_PATH" ] || [ ! -f "$ZIP_PATH" ]; then
+          echo "::error::Tidak bisa menemukan file .img/.zip OrangeFox yang valid (lewat build.log maupun pencarian rekursif di $PRODUCT_OUT)."
+          echo "== Struktur $PRODUCT_OUT sampai 3 level (untuk debug) =="
+          find "$PRODUCT_OUT" -maxdepth 3 2>/dev/null
           exit 1
         fi
+
+        echo "img-path=$IMG_PATH" >> "$GITHUB_OUTPUT"
+        echo "zip-path=$ZIP_PATH" >> "$GITHUB_OUTPUT"
 
     - name: Upload to Release
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          ${{ steps.pwd.outputs.workspace-folder }}/fox_12.1/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
-          ${{ steps.pwd.outputs.workspace-folder }}/fox_12.1/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.zip
+          ${{ steps.verify.outputs.img-path }}
+          ${{ steps.verify.outputs.zip-path }}
         name: ${{ github.event.inputs.DEVICE_NAME }}-fox12-${{ github.run_id }}
         tag_name: ${{ github.run_id }}
         fail_on_unmatched_files: true
