@@ -47,7 +47,7 @@ on:
       FOX_MAINTAINER_PATCH_VERSION:
         description: 'FOX_MAINTAINER_PATCH_VERSION — ISI ANGKA POLOS SAJA (contoh: 1, 2, 3). Ini otomatis JADI suffix, jangan isi versi lengkapnya sendiri (isi "2", bukan "R11.4_2")'
         required: true
-        default: '1'
+        default: '0'
       FOX_VANILLA_BUILD:
         description: 'Varian build. HyperOS = tuned utk stock/MIUI (decrypt, keymint asli device fisik, dll -- default). Vanilla = utk flash ROM custom AOSP/GKI (LineageOS, PixelOS, dll). Variabel resmi OrangeFox (FOX_VARIANT/FOX_VANILLA_BUILD) utk membedakan dua mode ini -- independen dari investigasi kegagalan flash payload.bin yang masih berjalan (kecurigaan saat ini di level source twinstall.cpp, bukan di variant setting ini).'
         required: true
