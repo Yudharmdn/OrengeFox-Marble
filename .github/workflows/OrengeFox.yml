@@ -64,7 +64,7 @@ jobs:
     - name: Free disk space (pre-cleanup)
       uses: jlumbroso/free-disk-space@main
       with:
-        preinstalled-runtimes: true
+        tool-cache: true
         android: true
         dotnet: true
         haskell: true
@@ -102,7 +102,7 @@ jobs:
       working-directory: ${{ steps.pwd.outputs.workspace-folder }}
 
     - name: Install OpenJDK
-      uses: actions/setup-java@v5
+      uses: actions/setup-java@v6
       with:
         distribution: 'zulu'
         java-version: '11'
@@ -326,5 +326,4 @@ jobs:
           ### ✨ OrangeFox Recovery — marble ✨
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
         
