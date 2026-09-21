@@ -10,7 +10,7 @@ on:
       DEVICE_TREE_URL:
         description: 'DEVICE_TREE_URL'
         required: true
-        default: 'https://github.com/mingzun09/android_device_xiaomi_marble-OFRP'
+        default: 'https://github.com/Ctapchuk/android_device_xiaomi_marble-OFRP'
       DEVICE_TREE_BRANCH:
         description: 'DEVICE_TREE_BRANCH (repo Ctapchuk/android_device_xiaomi_marble-OFRP.)'
         required: true
