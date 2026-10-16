@@ -9,4 +9,3 @@ diff --git a/config/BoardConfigSoong.mk b/config/BoardConfigSoong.mk
  SOONG_CONFIG_NAMESPACES += twrpVarsPlugin
  
  SOONG_CONFIG_twrpVarsPlugin :=
- 
